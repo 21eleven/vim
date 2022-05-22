@@ -48,6 +48,12 @@ require('packer').startup(function(use)
   }
 end)
 
+local o = vim.o
+
+o.expandtab = true
+o.smartindent = true
+o.tabstop = 4
+o.shiftwidth = 4
 
 vim.o.guifont = "Azeret Mono,Hack Nerd Font Mono,Noto Color Emoji,NotoEmoji Nerd Font:h16"
 vim.o.laststatus = 3
@@ -112,6 +118,12 @@ vim.g.maplocalleader = ' '
 vim.o.autowriteall = true
 vim.o.clipboard = "unnamedplus"
 
+function map(mode, lhs, rhs, opts)
+  local options = {noremap = true}
+  if opts then options = vim.tbl_extend('force', options, opts) end
+  vim.api.nvim_set_keymap(mode, lhs, rhs, options)
+end
+
 --Remap for dealing with word wrap
 vim.keymap.set('n', 'k', "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
 vim.keymap.set('n', 'j', "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
@@ -153,6 +165,7 @@ vim.keymap.set("n", "<leader>fy", ":Telescope find_files follow=true<cr>")
 vim.keymap.set("n", "<leader>fc", ":Telescope commands<CR>")
 vim.keymap.set("n", "<leader>fh", ":Telescope command_history<CR>")
 vim.keymap.set("n", "gd","<cmd>lua vim.lsp.buf.definition()<CR>" )
+map("n", "<leader>n", ":NvimTreeToggle<cr>")
 
 -- Highlight on yank
 local highlight_group = vim.api.nvim_create_augroup('YankHighlight', { clear = true })
