@@ -46,6 +46,8 @@ require('packer').startup(function(use)
     },
     tag = 'nightly' -- optional, updated every week. (see issue #1193)
   }
+  use 'mfussenegger/nvim-jdtls'
+use {'nvim-telescope/telescope-ui-select.nvim' }
 end)
 
 local o = vim.o
@@ -206,6 +208,34 @@ require('telescope').setup {
   },
 }
 
+-- This is your opts table
+require("telescope").setup {
+  extensions = {
+    ["ui-select"] = {
+      require("telescope.themes").get_dropdown {
+        -- even more opts
+      }
+
+      -- pseudo code / specification for writing custom displays, like the one
+      -- for "codeactions"
+      -- specific_opts = {
+      --   [kind] = {
+      --     make_indexed = function(items) -> indexed_items, width,
+      --     make_displayer = function(widths) -> displayer
+      --     make_display = function(displayer) -> function(e)
+      --     make_ordinal = function(e) -> string
+      --   },
+      --   -- for example to disable the custom builtin "codeactions" display
+      --      do the following
+      --   codeactions = false,
+      -- }
+    }
+  }
+}
+-- To get ui-select loaded and working with telescope, you need to call
+-- load_extension, somewhere after setup function:
+require("telescope").load_extension("ui-select")
+
 -- Enable telescope fzf native
 require('telescope').load_extension 'fzf'
 
@@ -215,10 +245,10 @@ vim.keymap.set('n', '<leader>sf', function()
   require('telescope.builtin').find_files { previewer = false }
 end)
 vim.keymap.set('n', '<leader>sb', require('telescope.builtin').current_buffer_fuzzy_find)
-vim.keymap.set('n', '<leader>sh', require('telescope.builtin').help_tags)
-vim.keymap.set('n', '<leader>st', require('telescope.builtin').tags)
+vim.keymap.set('n', '<leader>sh', require('telescope.builtin').command_history)
+vim.keymap.set('n', '<leader>st', ':Telescope<cr>')
 vim.keymap.set('n', '<leader>sd', require('telescope.builtin').grep_string)
-vim.keymap.set('n', '<leader>sp', require('telescope.builtin').live_grep)
+vim.keymap.set('n', '<leader>sg', require('telescope.builtin').live_grep)
 vim.keymap.set('n', '<leader>so', function()
   require('telescope.builtin').tags { only_current_buffer = true }
 end)
@@ -436,3 +466,65 @@ cmp.setup {
   },
 }
 -- vim: ts=2 sts=2 sw=2 et
+-- jdtls setup
+-- See `:help vim.lsp.start_client` for an overview of the supported `config` options.
+local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ':p:h:t')
+
+local jdtls_jar = vim.loop.os_homedir() .. "/bin/jdt-language-server/plugins/org.eclipse.equinox.launcher_*.jar"
+local jdtls_config = {
+  -- The command that starts the language server
+  -- See: https://github.com/eclipse/eclipse.jdt.ls#running-from-the-command-line
+  cmd = {
+    'start-jdtls',
+    -- 'java',
+    -- '-Declipse.application=org.eclipse.jdt.ls.core.id1',
+    -- '-Dosgi.bundles.defaultStartLevel=4',
+    -- '-Declipse.product=org.eclipse.jdt.ls.core.product',
+    -- '-Dlog.protocol=true',
+    -- '-Dlog.level=ALL',
+    -- '-Xms1g',
+    -- '-jar', jdtls_jar,
+    -- '--add-modules=ALL-SYSTEM',
+    -- '--add-opens', 'java.base/java.util=ALL-UNNAMED',
+    -- '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
+    -- '-data', 
+    vim.loop.os_homedir() .. '/.local/share/jdtls_workspace/' .. project_name,
+    -- '-data', vim.fn.getcwd(),
+  },
+
+  -- 💀
+  -- This is the default if not provided, you can remove it. Or adjust as needed.
+  -- One dedicated LSP server & client will be started per unique root_dir
+  root_dir = require('jdtls.setup').find_root({'.git', 'mvnw', 'gradlew'}),
+
+  -- Here you can configure eclipse.jdt.ls specific settings
+  -- See https://github.com/eclipse/eclipse.jdt.ls/wiki/Running-the-JAVA-LS-server-from-the-command-line#initialize-request
+  -- for a list of options
+  settings = {
+    java = {
+    }
+  },
+
+  -- Language server `initializationOptions`
+  -- You need to extend the `bundles` with paths to jar files
+  -- if you want to use additional eclipse.jdt.ls plugins.
+  --
+  -- See https://github.com/mfussenegger/nvim-jdtls#java-debug-installation
+  --
+  -- If you don't plan on using the debugger or other eclipse.jdt.ls plugins you can remove this
+  init_options = {
+    bundles = {}
+  },
+}
+-- This starts a new client & server,
+-- or attaches to an existing client & server depending on the `root_dir`.
+vim.api.nvim_create_autocmd({'BufEnter'}, { pattern = {"*.java"}, callback = function() require('jdtls').start_or_attach(jdtls_config) end })
+-- vim.cmd [[autocmd BufEnter *.java  lua  ]]
+-- vim.cmd [[
+-- if has('nvim-0.5')
+--    augroup lsp
+--      au!
+--      au FileType java lua require('jdtls').start_or_attach(jdtls_config)
+--    augroup end
+--  endif
+-- ]]
