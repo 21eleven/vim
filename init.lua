@@ -49,6 +49,10 @@ require('packer').startup(function(use)
   use 'mfussenegger/nvim-jdtls'
   use {'nvim-telescope/telescope-ui-select.nvim' }
   use { "folke/which-key.nvim"}
+    use({
+        "catppuccin/nvim",
+        as = "catppuccin"
+    })
 end)
 
 local o = vim.o
@@ -85,7 +89,10 @@ vim.wo.signcolumn = 'yes'
 
 --Set colorscheme
 vim.o.termguicolors = true
-vim.cmd [[colorscheme onedark]]
+
+vim.g.catppuccin_flavor = "dusk"
+vim.cmd [[colorscheme catppuccin]]
+require("catppuccin").setup{}
 
 -- Set completeopt to have a better completion experience
 vim.o.completeopt = 'menuone,noselect'
@@ -109,7 +116,7 @@ silent! unmap X
 require('lualine').setup {
   options = {
     icons_enabled = true,
-    theme = 'onedark',
+    theme = 'catppuccin',
     component_separators = '|',
     section_separators = '',
   },
@@ -558,7 +565,7 @@ local jdtls_config = {
     -- '--add-modules=ALL-SYSTEM',
     -- '--add-opens', 'java.base/java.util=ALL-UNNAMED',
     -- '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
-    -- '-data', 
+    -- '-data',
     vim.loop.os_homedir() .. '/.local/share/jdtls_workspace/' .. project_name,
     -- '-data', vim.fn.getcwd(),
   },
