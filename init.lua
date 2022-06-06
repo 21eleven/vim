@@ -172,6 +172,12 @@ vim.keymap.set("n", "<leader>fy", ":Telescope find_files follow=true<cr>")
 vim.keymap.set("n", "<leader>fc", ":Telescope commands<CR>")
 vim.keymap.set("n", "<leader>fh", ":Telescope command_history<CR>")
 vim.keymap.set("n", "gd","<cmd>lua vim.lsp.buf.definition()<CR>" )
+
+-- map("i", "<A-A>", "<esc>:<space><backspace>")
+-- map("i", "<A-S>", "<esc>/<backspace>")
+-- map("n", "<A-A>", "<esc>:<space><backspace>")
+-- map("n", "<A-S>", "<esc>/<backspace>")
+
 map("n", "<leader>n", ":NvimTreeToggle<cr>")
 
 require("which-key").setup {
