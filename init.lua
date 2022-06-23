@@ -281,6 +281,7 @@ require('gitsigns').setup {
 -- Telescope
 require('telescope').setup {
   defaults = {
+    wrap_results = true,
     mappings = {
       i = {
         ['<C-u>'] = false,
