@@ -58,6 +58,10 @@ require('packer').startup(function(use)
     use 'Darazaki/indent-o-matic'
     use('mrjones2014/smart-splits.nvim')
     use 'jose-elias-alvarez/null-ls.nvim'
+    use 'stevearc/aerial.nvim'
+    use {"akinsho/toggleterm.nvim", tag = 'v1.*', config = function()
+      require("toggleterm").setup()
+    end}
 end)
 
 local o = vim.o
@@ -195,8 +199,9 @@ vim.keymap.set("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>")
 map("n", "<leader>n", ":NvimTreeToggle<cr>")
 
 -- leader command
-
 vim.keymap.set("n", "<leader>cs", ":PackerSync<cr>")
+
+-- r section
 
 require("which-key").setup {
     plugins = {
@@ -689,5 +694,35 @@ local no_really = {
         end,
     },
 }
--- really?
+-- really? se
 null_ls.register(no_really)
+
+-- toggle term
+function _G.set_terminal_keymaps()
+  local opts = {noremap = true}
+  -- vim.api.nvim_buf_set_keymap(0, 't', '<esc>', [[<C-\><C-n>]], opts)
+  -- vim.api.nvim_buf_set_keymap(0, 't', 'jk', [[<C-\><C-n>]], opts)
+  vim.api.nvim_buf_set_keymap(0, 't', '<C-h>', [[<C-\><C-n><C-W>h]], opts)
+  vim.api.nvim_buf_set_keymap(0, 't', '<C-j>', [[<C-\><C-n><C-W>j]], opts)
+  vim.api.nvim_buf_set_keymap(0, 't', '<C-k>', [[<C-\><C-n><C-W>k]], opts)
+  vim.api.nvim_buf_set_keymap(0, 't', '<C-l>', [[<C-\><C-n><C-W>l]], opts)
+end
+
+-- if you only want these mappings for toggle term use term://*toggleterm#* instead
+vim.cmd('autocmd! TermOpen term://* lua set_terminal_keymaps()')
+local Terminal  = require('toggleterm.terminal').Terminal
+local lazygit = Terminal:new({ cmd = "lazygit", hidden = true, direction = "float" })
+-- local floatterm= Terminal:new({hidden = true })
+
+function _lazygit_toggle()
+  lazygit:toggle()
+end
+-- function _terminal_toggle()
+--     floatterm:toggle()
+-- end
+vim.api.nvim_set_keymap("n", "<leader>cg", "<cmd>lua _lazygit_toggle()<CR>", {noremap = true, silent = true})
+vim.api.nvim_set_keymap("t", "<leader>cg", "<cmd>lua _lazygit_toggle()<CR>", {noremap = true, silent = true})
+-- vim.keymap.set("n", "<leader>rt", "<cmd>lua _terminal_toggle()<CR>i")
+vim.keymap.set("n", "<leader>rt", "<cmd>ToggleTerm direction=float<CR>")
+vim.keymap.set('t', 'jk',  "<cmd>ToggleTerm direction=float<cr>")
+vim.keymap.set('t', 'kj', [[<C-\><C-n>]])
