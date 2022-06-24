@@ -106,6 +106,8 @@ require("catppuccin").setup {}
 -- Set completeopt to have a better completion experience
 vim.o.completeopt = 'menuone,noselect'
 
+vim.g.python_host_prog = "python"
+
 require "lightspeed".setup {
     ignore_case = true,
     labels = { "s", "f", "n", "j", "k", "l", "o", "d", "w", "e", "h", "m", "v", "g", "u", "c", ".", "z", "/", "F", "L",
@@ -721,7 +723,7 @@ end
 --     floatterm:toggle()
 -- end
 vim.api.nvim_set_keymap("n", "<leader>cg", "<cmd>lua _lazygit_toggle()<CR>", {noremap = true, silent = true})
-vim.api.nvim_set_keymap("t", "<leader>cg", "<cmd>lua _lazygit_toggle()<CR>", {noremap = true, silent = true})
+vim.api.nvim_set_keymap("t", "jg", "<cmd>lua _lazygit_toggle()<CR>", {noremap = true, silent = true})
 -- vim.keymap.set("n", "<leader>rt", "<cmd>lua _terminal_toggle()<CR>i")
 vim.keymap.set("n", "<leader>rt", "<cmd>ToggleTerm direction=float<CR>")
 vim.keymap.set('t', 'jk',  "<cmd>ToggleTerm direction=float<cr>")
