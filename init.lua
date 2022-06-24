@@ -57,6 +57,7 @@ require('packer').startup(function(use)
     use 'Shatur/neovim-session-manager'
     use 'Darazaki/indent-o-matic'
     use('mrjones2014/smart-splits.nvim')
+    use 'jose-elias-alvarez/null-ls.nvim'
 end)
 
 local o = vim.o
@@ -650,3 +651,43 @@ vim.keymap.set('n', '<C-h>', require('smart-splits').move_cursor_left)
 vim.keymap.set('n', '<C-j>', require('smart-splits').move_cursor_down)
 vim.keymap.set('n', '<C-k>', require('smart-splits').move_cursor_up)
 vim.keymap.set('n', '<C-l>', require('smart-splits').move_cursor_right)
+
+require("null-ls").setup({
+    sources = {
+        require("null-ls").builtins.formatting.stylua,
+        require("null-ls").builtins.diagnostics.eslint,
+        require("null-ls").builtins.completion.spell,
+    },
+})
+local null_ls = require("null-ls")
+local api = vim.api
+
+local no_really = {
+    method = null_ls.methods.DIAGNOSTICS,
+    filetypes = { "markdown", "text" },
+    generator = {
+        fn = function(params)
+            local diagnostics = {}
+            -- sources have access to a params object
+            -- containing info about the current file and editor state
+            for i, line in ipairs(params.content) do
+                local col, end_col = line:find("really")
+                if col and end_col then
+                    -- null-ls fills in undefined positions
+                    -- and converts source diagnostics into the required format
+                    table.insert(diagnostics, {
+                        row = i,
+                        col = col,
+                        end_col = end_col,
+                        source = "no-really",
+                        message = "Don't use 'really!'",
+                        severity = 2,
+                    })
+                end
+            end
+            return diagnostics
+        end,
+    },
+}
+-- really?
+null_ls.register(no_really)
