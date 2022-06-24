@@ -46,13 +46,16 @@ require('packer').startup(function(use)
     },
     tag = 'nightly' -- optional, updated every week. (see issue #1193)
   }
-  use 'mfussenegger/nvim-jdtls'
-  use {'nvim-telescope/telescope-ui-select.nvim' }
-  use { "folke/which-key.nvim"}
+      use 'mfussenegger/nvim-jdtls'
+      use {'nvim-telescope/telescope-ui-select.nvim' }
+      use { "folke/which-key.nvim"}
     use({
         "catppuccin/nvim",
         as = "catppuccin"
     })
+    use 'Shatur/neovim-session-manager'
+    use 'Darazaki/indent-o-matic'
+    use('mrjones2014/smart-splits.nvim')
 end)
 
 local o = vim.o
@@ -178,6 +181,7 @@ vim.keymap.set("n", "<leader>ff", ":Telescope find_files follow=true<cr>")
 vim.keymap.set("n", "<leader>fy", ":Telescope find_files follow=true<cr>")
 vim.keymap.set("n", "<leader>fc", ":Telescope commands<CR>")
 vim.keymap.set("n", "<leader>fh", ":Telescope command_history<CR>")
+vim.keymap.set("n", "<leader>ft", ":Telescope<cr>")
 vim.keymap.set("n", "gd","<cmd>lua vim.lsp.buf.definition()<CR>" )
 
 -- map("i", "<A-A>", "<esc>:<space><backspace>")
@@ -186,6 +190,10 @@ vim.keymap.set("n", "gd","<cmd>lua vim.lsp.buf.definition()<CR>" )
 -- map("n", "<A-S>", "<esc>/<backspace>")
 
 map("n", "<leader>n", ":NvimTreeToggle<cr>")
+
+-- leader command
+
+vim.keymap.set("n", "<leader>cs", ":PackerSync<cr>")
 
 require("which-key").setup {
   plugins = {
@@ -607,3 +615,21 @@ vim.api.nvim_create_autocmd({'BufEnter'}, { pattern = {"*.java"}, callback = fun
 --    augroup end
 --  endif
 -- ]]
+
+local Path = require('plenary.path')
+require('session_manager').setup({
+  sessions_dir = Path:new(vim.fn.stdpath('data'), 'sessions'), -- The directory where the session files will be saved.
+  path_replacer = '__', -- The character to which the path separator will be replaced for session files.
+  colon_replacer = '++', -- The character to which the colon symbol will be replaced for session files.
+  autoload_mode = require('session_manager.config').AutoloadMode.LastSession, -- Define what to do when Neovim is started without arguments. Possible values: Disabled, CurrentDir, LastSession
+  autosave_last_session = true, -- Automatically save last session on exit and on session switch.
+  autosave_ignore_not_normal = true, -- Plugin will not save a session when no buffers are opened, or all of them aren't writable or listed.
+  autosave_ignore_filetypes = { -- All buffers of these file types will be closed before the session is saved.
+    'gitcommit',
+  },
+  autosave_only_in_session = false, -- Always autosaves session. If true, only autosaves after a session is active.
+  max_path_length = 80,  -- Shorten the display path if length exceeds this threshold. Use 0 if don't want to shorten the path at all.
+})
+
+
+require('indent-o-matic').setup {}
