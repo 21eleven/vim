@@ -5,9 +5,9 @@ if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
     vim.fn.execute('!git clone https://github.com/wbthomason/packer.nvim ' .. install_path)
 end
 
-local packer_group = vim.api.nvim_create_augroup('Packer', { clear = true })
-vim.api.nvim_create_autocmd('BufWritePost',
-    { command = 'source <afile> | PackerCompile', group = packer_group, pattern = 'init.lua' })
+-- local packer_group = vim.api.nvim_create_augroup('Packer', { clear = true })
+-- vim.api.nvim_create_autocmd('BufWritePost',
+--     { command = 'source <afile> | PackerCompile', group = packer_group, pattern = 'init.lua' })
 
 require('packer').startup(function(use)
     use 'wbthomason/packer.nvim' -- Package manager
@@ -59,9 +59,51 @@ require('packer').startup(function(use)
     use('mrjones2014/smart-splits.nvim')
     use 'jose-elias-alvarez/null-ls.nvim'
     use 'stevearc/aerial.nvim'
-    use {"akinsho/toggleterm.nvim", tag = 'v1.*', config = function()
-      require("toggleterm").setup()
-    end}
+    use { "akinsho/toggleterm.nvim", tag = 'v1.*', config = function()
+        require("toggleterm").setup()
+    end }
+    -- use {
+    --     "max397574/better-escape.nvim",
+    --     config = function()
+    --         require("better_escape").setup()
+    --     end,
+    -- }
+    use 'famiu/bufdelete.nvim'
+    use {
+        "nvim-neo-tree/neo-tree.nvim",
+        branch = "v2.x",
+        requires = {
+            "nvim-lua/plenary.nvim",
+            "kyazdani42/nvim-web-devicons", -- not strictly required, but recommended
+            "MunifTanjim/nui.nvim",
+            {
+                -- only needed if you want to use the commands with "_with_window_picker" suffix
+                's1n7ax/nvim-window-picker',
+                tag = "1.*",
+                config = function()
+                    require 'window-picker'.setup({
+                        autoselect_one = true,
+                        include_current = false,
+                        filter_rules = {
+                            -- filter using buffer options
+                            bo = {
+                                -- if the file type is one of following, the window will be ignored
+                                filetype = { 'neo-tree', "neo-tree-popup", "notify", "quickfix" },
+
+                                -- if the buffer type is one of following, the window will be ignored
+                                buftype = { 'terminal' },
+                            },
+                        },
+                        other_win_hl_color = '#e35e4f',
+                    })
+                end,
+            }
+        },
+    }
+    use {
+        "windwp/nvim-autopairs",
+        config = function() require("nvim-autopairs").setup {} end
+    }
 end)
 
 local o = vim.o
@@ -167,8 +209,6 @@ vim.keymap.set("n", "<leader>w", ":w!<cr>")
 vim.keymap.set("n", "<leader><leader>w", ":wq!<cr>")
 vim.keymap.set("n", "<leader>q", ":q<cr>")
 vim.keymap.set("n", "<leader><leader>q", ":qa!<cr>")
--- map('n', '<leader><leader>e', ':q!<cr>')
-
 vim.keymap.set("n", "<leader>j", ":BufferLineCyclePrev<CR>")
 vim.keymap.set("n", "<leader>k", ":BufferLineCycleNext<CR>")
 vim.keymap.set("n", "<leader>h", "<C-w>h<CR>0")
@@ -176,9 +216,8 @@ vim.keymap.set("n", "<leader>h", "<C-w>h<CR>0")
 vim.keymap.set("n", "<leader>l", "<C-w>l<CR>0")
 -- map('n', '<leader>t', ':BufferPick<CR>')
 vim.keymap.set("n", "tt", ":BufferLinePick<CR>")
-vim.keymap.set("n", "<leader>e", ":lua require('core/utils').close_buffer() <CR>")
-vim.keymap.set("n", "<leader><leader>e", ":bdelete!<CR>")
-vim.keymap.set("n", "<leader>gd", ":Gdiffsplit")
+vim.keymap.set("n", "<leader>x", ":Bd<cr>")
+vim.keymap.set("n", "<leader>gd", ":Gdiffsplit<cr>")
 vim.keymap.set("n", "<leader>gw", ":Gw<cr>")
 vim.keymap.set("n", "<leader>gg", ":Gw<cr><esc>:sleep 100m<cr><esc>:Git commit<cr>")
 vim.keymap.set("n", "<leader>gc", ":Git commit<cr>")
@@ -186,6 +225,7 @@ vim.keymap.set("n", "<leader>gs", ":! git status<cr>")
 vim.keymap.set("n", "<leader>gd", ":Gdiffsplit<cr>")
 vim.keymap.set("n", "<leader>gb", ":Git blame<cr>")
 vim.keymap.set("n", "<leader>fg", ":Telescope live_grep<cr>")
+vim.keymap.set("n", "<leader>fw", ":Telescope help_tags<cr>")
 vim.keymap.set("n", "<leader>ff", ":Telescope find_files follow=true<cr>")
 vim.keymap.set("n", "<leader>fy", ":Telescope find_files follow=true<cr>")
 vim.keymap.set("n", "<leader>fc", ":Telescope commands<CR>")
@@ -437,7 +477,7 @@ local capabilities = vim.lsp.protocol.make_client_capabilities()
 capabilities = require('cmp_nvim_lsp').update_capabilities(capabilities)
 
 -- Enable the following language servers
-local servers = { 'clangd', 'rust_analyzer', 'pyright', 'tsserver' }
+local servers = { 'clangd', 'rust_analyzer', 'pyright', 'tsserver', 'hls' }
 for _, lsp in ipairs(servers) do
     lspconfig[lsp].setup {
         on_attach = on_attach,
@@ -482,7 +522,8 @@ lspconfig.sumneko_lua.setup {
 
 local luasnip = require 'luasnip'
 require("bufferline").setup {
-    options = { offsets = { { filetype = "NvimTree", text = "", padding = 1 } } }
+    options = { offsets = { { filetype = "NvimTree", text = "", padding = 1 },
+        { filetype = "neo-tree", text = "", padding = 1 } } }
 }
 local nvimtreeopts = {
     filters = {
@@ -592,7 +633,7 @@ local jdtls_config = {
     -- 💀
     -- This is the default if not provided, you can remove it. Or adjust as needed.
     -- One dedicated LSP server & client will be started per unique root_dir
-    root_dir = require('jdtls.setup').find_root({ '.git', 'mvnw', 'gradlew' }),
+    root_dir = require('jdtls.setup').find_root({ '.git', 'mvnw', 'pom.xml', 'gradlew' }),
 
     -- Here you can configure eclipse.jdt.ls specific settings
     -- See https://github.com/eclipse/eclipse.jdt.ls/wiki/Running-the-JAVA-LS-server-from-the-command-line#initialize-request
@@ -632,7 +673,7 @@ require('session_manager').setup({
     sessions_dir = Path:new(vim.fn.stdpath('data'), 'sessions'), -- The directory where the session files will be saved.
     path_replacer = '__', -- The character to which the path separator will be replaced for session files.
     colon_replacer = '++', -- The character to which the colon symbol will be replaced for session files.
-    autoload_mode = require('session_manager.config').AutoloadMode.LastSession, -- Define what to do when Neovim is started without arguments. Possible values: Disabled, CurrentDir, LastSession
+    autoload_mode = require('session_manager.config').AutoloadMode.CurrentDir, -- Define what to do when Neovim is started without arguments. Possible values: Disabled, CurrentDir, LastSession
     autosave_last_session = true, -- Automatically save last session on exit and on session switch.
     autosave_ignore_not_normal = true, -- Plugin will not save a session when no buffers are opened, or all of them aren't writable or listed.
     autosave_ignore_filetypes = { -- All buffers of these file types will be closed before the session is saved.
@@ -661,7 +702,7 @@ vim.keymap.set('n', '<C-l>', require('smart-splits').move_cursor_right)
 
 require("null-ls").setup({
     sources = {
-        require("null-ls").builtins.formatting.stylua,
+        -- require("null-ls").builtins.formatting.stylua,
         require("null-ls").builtins.diagnostics.eslint,
         require("null-ls").builtins.completion.spell,
     },
@@ -701,30 +742,238 @@ null_ls.register(no_really)
 
 -- toggle term
 function _G.set_terminal_keymaps()
-  local opts = {noremap = true}
-  -- vim.api.nvim_buf_set_keymap(0, 't', '<esc>', [[<C-\><C-n>]], opts)
-  -- vim.api.nvim_buf_set_keymap(0, 't', 'jk', [[<C-\><C-n>]], opts)
-  vim.api.nvim_buf_set_keymap(0, 't', '<C-h>', [[<C-\><C-n><C-W>h]], opts)
-  vim.api.nvim_buf_set_keymap(0, 't', '<C-j>', [[<C-\><C-n><C-W>j]], opts)
-  vim.api.nvim_buf_set_keymap(0, 't', '<C-k>', [[<C-\><C-n><C-W>k]], opts)
-  vim.api.nvim_buf_set_keymap(0, 't', '<C-l>', [[<C-\><C-n><C-W>l]], opts)
+    local opts = { noremap = true }
+    -- vim.api.nvim_buf_set_keymap(0, 't', '<esc>', [[<C-\><C-n>]], opts)
+    -- vim.api.nvim_buf_set_keymap(0, 't', 'jk', [[<C-\><C-n>]], opts)
+    vim.api.nvim_buf_set_keymap(0, 't', '<C-h>', [[<C-\><C-n><C-W>h]], opts)
+    vim.api.nvim_buf_set_keymap(0, 't', '<C-j>', [[<C-\><C-n><C-W>j]], opts)
+    vim.api.nvim_buf_set_keymap(0, 't', '<C-k>', [[<C-\><C-n><C-W>k]], opts)
+    vim.api.nvim_buf_set_keymap(0, 't', '<C-l>', [[<C-\><C-n><C-W>l]], opts)
 end
 
 -- if you only want these mappings for toggle term use term://*toggleterm#* instead
 vim.cmd('autocmd! TermOpen term://* lua set_terminal_keymaps()')
-local Terminal  = require('toggleterm.terminal').Terminal
-local lazygit = Terminal:new({ cmd = "lazygit", hidden = true, direction = "float" })
+local Terminal = require('toggleterm.terminal').Terminal
+local lazygit  = Terminal:new({ cmd = "lazygit", hidden = true, direction = "float" })
 -- local floatterm= Terminal:new({hidden = true })
 
 function _lazygit_toggle()
-  lazygit:toggle()
+    lazygit:toggle()
 end
+
 -- function _terminal_toggle()
 --     floatterm:toggle()
 -- end
-vim.api.nvim_set_keymap("n", "<leader>cg", "<cmd>lua _lazygit_toggle()<CR>", {noremap = true, silent = true})
-vim.api.nvim_set_keymap("t", "jg", "<cmd>lua _lazygit_toggle()<CR>", {noremap = true, silent = true})
+vim.api.nvim_set_keymap("n", "<leader>cg", "<cmd>lua _lazygit_toggle()<CR>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("t", "jg", "<cmd>lua _lazygit_toggle()<CR>", { noremap = true, silent = true })
 -- vim.keymap.set("n", "<leader>rt", "<cmd>lua _terminal_toggle()<CR>i")
 vim.keymap.set("n", "<leader>rt", "<cmd>ToggleTerm direction=float<CR>")
-vim.keymap.set('t', 'jk',  "<cmd>ToggleTerm direction=float<cr>")
+vim.keymap.set('t', 'jk', "<cmd>ToggleTerm direction=float<cr>")
 vim.keymap.set('t', 'kj', [[<C-\><C-n>]])
+vim.keymap.set("n", "<leader>rl", "<cmd>SessionManager load_session<cr>")
+
+require('aerial').setup({})
+
+-- Unless you are still migrating, remove the deprecated commands from v1.x
+vim.cmd([[ let g:neo_tree_remove_legacy_commands = 1 ]])
+
+-- If you want icons for diagnostic errors, you'll need to define them somewhere:
+vim.fn.sign_define("DiagnosticSignError",
+    { text = " ", texthl = "DiagnosticSignError" })
+vim.fn.sign_define("DiagnosticSignWarn",
+    { text = " ", texthl = "DiagnosticSignWarn" })
+vim.fn.sign_define("DiagnosticSignInfo",
+    { text = " ", texthl = "DiagnosticSignInfo" })
+vim.fn.sign_define("DiagnosticSignHint",
+    { text = "", texthl = "DiagnosticSignHint" })
+-- NOTE: this is changed from v1.x, which used the old style of highlight groups
+-- in the form "LspDiagnosticsSignWarning"
+
+require("neo-tree").setup({
+    close_if_last_window = true, -- Close Neo-tree if it is the last window left in the tab
+    popup_border_style = "rounded",
+    enable_git_status = true,
+    enable_diagnostics = true,
+    sort_case_insensitive = false, -- used when sorting files and directories in the tree
+    sort_function = nil, -- use a custom function for sorting files and directories in the tree
+    -- sort_function = function (a,b)
+    --       if a.type == b.type then
+    --           return a.path > b.path
+    --       else
+    --           return a.type > b.type
+    --       end
+    --   end , -- this sorts files and directories descendantly
+    default_component_configs = {
+        container = {
+            enable_character_fade = true
+        },
+        indent = {
+            indent_size = 2,
+            padding = 1, -- extra padding on left hand side
+            -- indent guides
+            with_markers = true,
+            indent_marker = "│",
+            last_indent_marker = "└",
+            highlight = "NeoTreeIndentMarker",
+            -- expander config, needed for nesting files
+            with_expanders = nil, -- if nil and file nesting is enabled, will enable expanders
+            expander_collapsed = "",
+            expander_expanded = "",
+            expander_highlight = "NeoTreeExpander",
+        },
+        icon = {
+            folder_closed = "",
+            folder_open = "",
+            folder_empty = "ﰊ",
+            -- The next two settings are only a fallback, if you use nvim-web-devicons and configure default icons there
+            -- then these will never be used.
+            default = "*",
+            highlight = "NeoTreeFileIcon"
+        },
+        modified = {
+            symbol = "[+]",
+            highlight = "NeoTreeModified",
+        },
+        name = {
+            trailing_slash = false,
+            use_git_status_colors = true,
+            highlight = "NeoTreeFileName",
+        },
+        git_status = {
+            symbols = {
+                -- Change type
+                added     = "", -- or "✚", but this is redundant info if you use git_status_colors on the name
+                modified  = "", -- or "", but this is redundant info if you use git_status_colors on the name
+                deleted   = "✖", -- this can only be used in the git_status source
+                renamed   = "", -- this can only be used in the git_status source
+                -- Status type
+                untracked = "",
+                ignored   = "",
+                unstaged  = "",
+                staged    = "",
+                conflict  = "",
+            }
+        },
+    },
+    window = {
+        position = "left",
+        width = 40,
+        mapping_options = {
+            noremap = true,
+            nowait = true,
+        },
+        mappings = {
+            ["<space>"] = {
+                "toggle_node",
+                nowait = false, -- disable `nowait` if you have existing combos starting with this char that you want to use
+            },
+            ["<2-LeftMouse>"] = "open",
+            ["<cr>"] = "open",
+            ["S"] = "open_split",
+            ["s"] = "open_vsplit",
+            -- ["S"] = "split_with_window_picker",
+            -- ["s"] = "vsplit_with_window_picker",
+            ["t"] = "open_tabnew",
+            ["w"] = "open_with_window_picker",
+            ["C"] = "close_node",
+            ["a"] = {
+                "add",
+                -- some commands may take optional config options, see `:h neo-tree-mappings` for details
+                config = {
+                    show_path = "none" -- "none", "relative", "absolute"
+                }
+            },
+            ["A"] = "add_directory", -- also accepts the optional config.show_path option like "add".
+            ["d"] = "delete",
+            ["r"] = "rename",
+            ["y"] = "copy_to_clipboard",
+            ["x"] = "cut_to_clipboard",
+            ["p"] = "paste_from_clipboard",
+            ["c"] = "copy", -- takes text input for destination, also accepts the optional config.show_path option like "add":
+            -- ["c"] = {
+            --  "copy",
+            --  config = {
+            --    show_path = "none" -- "none", "relative", "absolute"
+            --  }
+            --}
+            ["m"] = "move", -- takes text input for destination, also accepts the optional config.show_path option like "add".
+            ["q"] = "close_window",
+            ["R"] = "refresh",
+            ["?"] = "show_help",
+        }
+    },
+    nesting_rules = {},
+    filesystem = {
+        filtered_items = {
+            visible = false, -- when true, they will just be displayed differently than normal items
+            hide_dotfiles = true,
+            hide_gitignored = true,
+            hide_hidden = true, -- only works on Windows for hidden files/directories
+            hide_by_name = {
+                --"node_modules"
+            },
+            hide_by_pattern = { -- uses glob style patterns
+                --"*.meta"
+            },
+            never_show = { -- remains hidden even if visible is toggled to true
+                --".DS_Store",
+                --"thumbs.db"
+            },
+        },
+        follow_current_file = false, -- This will find and focus the file in the active buffer every
+        -- time the current file is changed while the tree is open.
+        group_empty_dirs = false, -- when true, empty folders will be grouped together
+        hijack_netrw_behavior = "open_default", -- netrw disabled, opening a directory opens neo-tree
+        -- in whatever position is specified in window.position
+        -- "open_current",  -- netrw disabled, opening a directory opens within the
+        -- window like netrw would, regardless of window.position
+        -- "disabled",    -- netrw left alone, neo-tree does not handle opening dirs
+        use_libuv_file_watcher = false, -- This will use the OS level file watchers to detect changes
+        -- instead of relying on nvim autocmd events.
+        window = {
+            mappings = {
+                ["<bs>"] = "navigate_up",
+                ["."] = "set_root",
+                ["H"] = "toggle_hidden",
+                ["/"] = "fuzzy_finder",
+                ["f"] = "filter_on_submit",
+                ["<c-x>"] = "clear_filter",
+                ["[g"] = "prev_git_modified",
+                ["]g"] = "next_git_modified",
+            }
+        }
+    },
+    buffers = {
+        follow_current_file = true, -- This will find and focus the file in the active buffer every
+        -- time the current file is changed while the tree is open.
+        group_empty_dirs = true, -- when true, empty folders will be grouped together
+        show_unloaded = true,
+        window = {
+            mappings = {
+                ["bd"] = "buffer_delete",
+                ["<bs>"] = "navigate_up",
+                ["."] = "set_root",
+            }
+        },
+    },
+    git_status = {
+        window = {
+            position = "float",
+            mappings = {
+                ["A"]  = "git_add_all",
+                ["gu"] = "git_unstage_file",
+                ["ga"] = "git_add_file",
+                ["gr"] = "git_revert_file",
+                ["gc"] = "git_commit",
+                ["gp"] = "git_push",
+                ["gg"] = "git_commit_and_push",
+            }
+        }
+
+    }
+})
+
+vim.cmd [[autocmd BufWritePre * lua vim.lsp.buf.formatting_sync()]]
+-- vim.cmd([[nnoremap \ :Neotree reveal<cr>]])
+
+require('rust-tools').setup({})
