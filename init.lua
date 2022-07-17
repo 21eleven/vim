@@ -186,11 +186,21 @@ vim.g.maplocalleader = ' '
 vim.o.autowriteall = true
 vim.o.clipboard = "unnamedplus"
 
-function map(mode, lhs, rhs, opts)
+local function map(mode, lhs, rhs, opts)
     local options = { noremap = true }
     if opts then options = vim.tbl_extend('force', options, opts) end
     vim.api.nvim_set_keymap(mode, lhs, rhs, options)
 end
+
+local function smart_dd()
+    if vim.api.nvim_get_current_line():match("^%s*$") then
+        return "\"_dd"
+    else
+        return "dd"
+    end
+end
+
+vim.keymap.set("n", "dd", smart_dd, { noremap = true, expr = true })
 
 --Remap for dealing with word wrap
 vim.keymap.set('n', 'k', "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
