@@ -26,6 +26,7 @@ require('packer').startup(function(use)
     use { 'lewis6991/gitsigns.nvim', requires = { 'nvim-lua/plenary.nvim' } }
     -- Highlight, edit, and navigate code using a fast incremental parsing library
     use 'nvim-treesitter/nvim-treesitter'
+    use 'nvim-treesitter/nvim-treesitter-context'
     -- Additional textobjects for treesitter
     use 'nvim-treesitter/nvim-treesitter-textobjects'
     use 'neovim/nvim-lspconfig' -- Collection of configurations for built-in LSP client
@@ -104,6 +105,15 @@ require('packer').startup(function(use)
         "windwp/nvim-autopairs",
         config = function() require("nvim-autopairs").setup {} end
     }
+    use {
+        'MrcJkb/haskell-tools.nvim',
+        requires = {
+            'neovim/nvim-lspconfig',
+            'nvim-lua/plenary.nvim',
+            'nvim-telescope/telescope.nvim',
+        },
+    }
+    use { 'ThePrimeagen/harpoon' }
 end)
 
 local o = vim.o
@@ -120,6 +130,7 @@ vim.o.hlsearch = true
 
 --Make line numbers default
 vim.wo.number = true
+vim.o.cursorline = true
 
 --Enable mouse mode
 vim.o.mouse = 'a'
@@ -233,7 +244,19 @@ vim.keymap.set("n", "<leader>gg", ":Gw<cr><esc>:sleep 100m<cr><esc>:Git commit<c
 vim.keymap.set("n", "<leader>gc", ":Git commit<cr>")
 vim.keymap.set("n", "<leader>gs", ":! git status<cr>")
 vim.keymap.set("n", "<leader>gd", ":Gdiffsplit<cr>")
-vim.keymap.set("n", "<leader>gb", ":Git blame<cr>")
+SelectGitModified = function()
+    vim.ui.select(
+        vim.fn.split(
+            vim.fn.system('git diff --name-only'),
+            '\n'
+        ),
+        { prompt = "unstaged files" },
+        function(f) vim.api.nvim_command("e " .. f) end
+    )
+end
+
+Harpoon = require('harpoon.ui')
+vim.keymap.set("n", "<leader>gm", SelectGitModified)
 vim.keymap.set("n", "<leader>fg", ":Telescope live_grep<cr>")
 vim.keymap.set("n", "<leader>fw", ":Telescope help_tags<cr>")
 vim.keymap.set("n", "<leader>ff", ":Telescope find_files follow=true<cr>")
@@ -242,6 +265,10 @@ vim.keymap.set("n", "<leader>fc", ":Telescope commands<CR>")
 vim.keymap.set("n", "<leader>fh", ":Telescope command_history<CR>")
 vim.keymap.set("n", "<leader>ft", ":Telescope<cr>")
 vim.keymap.set("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>")
+vim.keymap.set("n", "zh", "<cmd>lua require('harpoon.ui').toggle_quick_menu()<CR>")
+vim.keymap.set("n", "zm", "<cmd>lua require('harpoon.mark').add_file()<CR>")
+vim.keymap.set("n", "zk", Harpoon.nav_next);
+vim.keymap.set("n", "zj", Harpoon.nav_prev);
 
 -- map("i", "<A-A>", "<esc>:<space><backspace>")
 -- map("i", "<A-S>", "<esc>/<backspace>")
@@ -500,16 +527,48 @@ for _, lsp in ipairs(servers) do
         -- };
     }
 end
---
-require 'lspconfig'.hls.setup {
-    on_attach = on_attach,
-    capabilities = capabilities,
-    settings = {
-        haskell = {
-            formattingProvider = "stylish-haskell";
-        };
-    };
+local ht = require('haskell-tools')
+local def_opts = { noremap = true, silent = true, }
+ht.setup {
+    hls = {
+        -- See nvim-lspconfig's  suggested configuration for keymaps, etc.
+        on_attach = function(client, bufnr)
+            local opts = vim.tbl_extend('keep', def_opts, { buffer = bufnr, })
+            -- haskell-language-server relies heavily on codeLenses,
+            -- so auto-refresh (see advanced configuration) is enabled by default
+            vim.keymap.set('n', '<space>ca', vim.lsp.codelens.run, opts)
+            vim.keymap.set('n', '<space>hs', ht.hoogle.hoogle_signature, opts)
+            -- default_on_attach(client, bufnr)  -- if defined, see nvim-lspconfig
+        end,
+        settings = {
+            haskell = { -- haskell-language-server options
+                formattingProvider = 'brittany',
+                -- formattingProvider = 'fourmolu',
+                checkProject = true, -- Setting this to true could have a performance impact on large mono repos.
+                -- ...
+            }
+        }
+    },
 }
+-- Suggested keymaps that do not depend on haskell-language-server
+-- Toggle a GHCi repl for the current package
+vim.keymap.set('n', '<leader>rr', ht.repl.toggle, def_opts)
+-- Toggle a GHCi repl for the current buffer
+vim.keymap.set('n', '<leader>rf', function()
+    ht.repl.toggle(vim.api.nvim_buf_get_name(0))
+end, def_opts)
+vim.keymap.set('n', '<leader>rq', ht.repl.quit, def_opts)
+
+--
+-- require 'lspconfig'.hls.setup {
+--     on_attach = on_attach,
+--     capabilities = capabilities,
+--     settings = {
+--         haskell = {
+--             formattingProvider = "stylish-haskell";
+--         };
+--     };
+-- }
 
 -- Example custom server
 -- Make runtime files discoverable to the server
@@ -730,7 +789,7 @@ require("null-ls").setup({
     sources = {
         -- require("null-ls").builtins.formatting.stylua,
         require("null-ls").builtins.diagnostics.eslint,
-        require("null-ls").builtins.completion.spell,
+        -- require("null-ls").builtins.completion.spell,
     },
 })
 local null_ls = require("null-ls")
