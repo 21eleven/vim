@@ -130,6 +130,7 @@ vim.o.hlsearch = true
 
 --Make line numbers default
 vim.wo.number = true
+vim.wo.relativenumber = true
 vim.o.cursorline = true
 
 --Enable mouse mode
