@@ -114,6 +114,7 @@ require('packer').startup(function(use)
         },
     }
     use { 'ThePrimeagen/harpoon' }
+    use { "shortcuts/no-neck-pain.nvim", tag = "*" }
 end)
 
 local o = vim.o
