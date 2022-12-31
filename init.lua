@@ -115,6 +115,11 @@ require('packer').startup(function(use)
     }
     use { 'ThePrimeagen/harpoon' }
     use { "shortcuts/no-neck-pain.nvim", tag = "*" }
+    use({
+        'rose-pine/neovim',
+        as = 'rose-pine',
+    })
+    use 'folke/tokyonight.nvim'
 end)
 
 local o = vim.o
@@ -183,6 +188,8 @@ silent! unmap X
 require('lualine').setup {
     options = {
         icons_enabled = true,
+        -- tokyonight
+        -- @usage 'rose-pine' | 'rose-pine-alt'
         theme = 'catppuccin',
         component_separators = '|',
         section_separators = '',
